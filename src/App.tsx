@@ -333,7 +333,7 @@ function App() {
 
             {/* Right Side - Video Previews */}
             {uploadedVideoURL && (
-              <div className="w-full lg:w-1/2">
+              <div className="w-full lg:w-1/2 lg:sticky lg:top-8 lg:self-start">
                 <div className="bg-white rounded-lg shadow-lg p-6">
                   {/* Tab Navigation */}
                   <div className="flex border-b border-gray-200 mb-6">
