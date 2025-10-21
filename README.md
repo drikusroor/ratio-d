@@ -1,75 +1,112 @@
-# React + TypeScript + Vite
+# Ratio-D 🎬
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A browser-based video aspect ratio converter that allows you to transform videos to different aspect ratios directly in your browser—no server uploads required!
 
-Currently, two official plugins are available:
+## 📖 Description
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Ratio-D is a privacy-focused video conversion tool that processes videos entirely client-side using WebAssembly. Upload your video, select your target aspect ratio (16:9, 9:16, 1:1, etc.), choose how to fit the content (pad, crop, or stretch), and download your converted video—all without ever uploading your content to a server.
 
-## React Compiler
+## ✨ Features
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- **🔒 Privacy-First**: All video processing happens in your browser
+- **🎯 Multiple Aspect Ratios**: Support for common formats including:
+  - 16:9 (Widescreen)
+  - 9:16 (Vertical/TikTok)
+  - 1:1 (Square/Instagram)
+  - 4:3 (Classic TV)
+  - 21:9 (Ultrawide)
+  - 4:5 (Instagram Portrait)
+- **📐 Flexible Fit Modes**:
+  - **Pad**: Add black bars to maintain original aspect ratio
+  - **Crop**: Fill the frame by cropping excess content
+  - **Stretch**: Stretch the video to fill the frame
+- **👀 Live Preview**: Compare original and converted videos side-by-side
+- **📥 Drag & Drop**: Easy file upload with drag-and-drop support
+- **💾 Instant Download**: Download converted videos immediately
 
-Note: This will impact Vite dev & build performances.
+## 🛠️ Tech Stack
 
-## Expanding the ESLint configuration
+- **Frontend Framework**: [React 19](https://react.dev/) with TypeScript
+- **Build Tool**: [Vite](https://vitejs.dev/) (using Rolldown)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Video Processing**: [FFmpeg.wasm](https://ffmpegwasm.netlify.app/) - WebAssembly port of FFmpeg
+- **Code Quality**: 
+  - [Biome](https://biomejs.dev/) for linting and formatting
+  - [ESLint](https://eslint.org/) with TypeScript support
+  - [React Compiler](https://react.dev/learn/react-compiler) enabled
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🚀 Getting Started
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Prerequisites
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- [Bun](https://bun.sh/) (package manager and runtime)
+- Modern web browser with SharedArrayBuffer support
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/ratio-d.git
+cd ratio-d
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. Install dependencies:
+```bash
+bun install
 ```
+
+3. Start the development server:
+```bash
+bun run dev
+```
+
+4. Open your browser and navigate to `http://localhost:5173`
+
+### Building for Production
+
+```bash
+bun run build
+```
+
+The built files will be in the `dist` directory.
+
+### Preview Production Build
+
+```bash
+bun run preview
+```
+
+## 📝 Usage
+
+1. **Upload a Video**: Click the upload area or drag and drop a video file
+2. **Select Aspect Ratio**: Choose your target aspect ratio from the available options
+3. **Choose Fit Mode**: Select how the video should be fitted:
+   - Pad for letterboxing/pillarboxing
+   - Crop to fill the frame
+   - Stretch to ignore aspect ratio
+4. **Convert**: Click the convert button and wait for processing
+5. **Preview & Download**: View the converted video and download when satisfied
+
+## 🔧 Scripts
+
+- `bun run dev` - Start development server
+- `bun run build` - Build for production
+- `bun run preview` - Preview production build
+- `bun run lint` - Lint code with Biome
+- `bun run lint:fix` - Lint and auto-fix issues with Biome
+
+## 🌐 Browser Compatibility
+
+This application requires browsers that support SharedArrayBuffer for FFmpeg.wasm to work. Most modern browsers support this, but you may need to serve the application with specific COOP/COEP headers (already configured in the Vite dev server).
+
+## 📄 License
+
+MIT
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome!
+
+## 👤 Author
+
+Drikus Roor, with the help of GitHub Copilot
