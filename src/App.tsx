@@ -165,8 +165,8 @@ function App() {
 			]);
 
 			const fileData = await ffmpeg.readFile(outputFileName);
-			const data = new Uint8Array(fileData as ArrayBuffer);
-			const blob = new Blob([data.buffer], { type: "video/mp4" });
+			const uint8Array = new Uint8Array(fileData as unknown as ArrayBuffer);
+			const blob = new Blob([uint8Array], { type: "video/mp4" });
 			const url = URL.createObjectURL(blob);
 
 			setProcessedVideoURL(url);
