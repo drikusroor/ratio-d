@@ -2,10 +2,29 @@ import { useState, useRef } from "react";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { toBlobURL, fetchFile } from "@ffmpeg/util";
 
+type AspectRatio = {
+  label: string;
+  ratio: string;
+  width: number;
+  height: number;
+};
+
+const ASPECT_RATIOS: AspectRatio[] = [
+  { label: "16:9 (Widescreen)", ratio: "16:9", width: 1920, height: 1080 },
+  { label: "9:16 (Vertical/TikTok)", ratio: "9:16", width: 1080, height: 1920 },
+  { label: "1:1 (Square/Instagram)", ratio: "1:1", width: 1080, height: 1080 },
+  { label: "4:3 (Classic TV)", ratio: "4:3", width: 1440, height: 1080 },
+  { label: "21:9 (Ultrawide)", ratio: "21:9", width: 2560, height: 1080 },
+  { label: "4:5 (Instagram Portrait)", ratio: "4:5", width: 1080, height: 1350 },
+];
+
 function App() {
   const [loaded, setLoaded] = useState(false);
   const [uploadedVideo, setUploadedVideo] = useState<File | null>(null);
   const [uploadedVideoURL, setUploadedVideoURL] = useState<string>("");
+  const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatio>(ASPECT_RATIOS[0]);
+  const [processing, setProcessing] = useState(false);
+  const [processedVideoURL, setProcessedVideoURL] = useState<string>("");
   const ffmpegRef = useRef(new FFmpeg());
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const messageRef = useRef<HTMLParagraphElement | null>(null);
@@ -39,6 +58,7 @@ function App() {
       setUploadedVideo(file);
       const url = URL.createObjectURL(file);
       setUploadedVideoURL(url);
+      setProcessedVideoURL(""); // Reset processed video
     } else {
       alert("Please upload a valid video file");
     }
@@ -55,41 +75,71 @@ function App() {
       setUploadedVideo(file);
       const url = URL.createObjectURL(file);
       setUploadedVideoURL(url);
+      setProcessedVideoURL(""); // Reset processed video
     } else {
       alert("Please upload a valid video file");
     }
   };
 
-  const processUploadedVideo = async () => {
+  const convertVideoAspectRatio = async () => {
     if (!uploadedVideo) return;
     
+    setProcessing(true);
     const ffmpeg = ffmpegRef.current;
     const inputFileName = uploadedVideo.name;
-    const outputFileName = `output_${Date.now()}.mp4`;
+    const outputFileName = `ratio-d_${selectedAspectRatio.ratio.replace(":", "x")}_${Date.now()}.mp4`;
     
-    await ffmpeg.writeFile(inputFileName, await fetchFile(uploadedVideo));
-    await ffmpeg.exec(["-i", inputFileName, outputFileName]);
-    const fileData = await ffmpeg.readFile(outputFileName);
-    const data = new Uint8Array(fileData as ArrayBuffer);
-    
-    if (videoRef.current) {
-      videoRef.current.src = URL.createObjectURL(
-        new Blob([data.buffer], { type: "video/mp4" })
-      );
+    try {
+      await ffmpeg.writeFile(inputFileName, await fetchFile(uploadedVideo));
+      
+      // FFmpeg command to convert aspect ratio with padding (pillarbox/letterbox)
+      await ffmpeg.exec([
+        "-i", inputFileName,
+        "-vf", `scale=${selectedAspectRatio.width}:${selectedAspectRatio.height}:force_original_aspect_ratio=decrease,pad=${selectedAspectRatio.width}:${selectedAspectRatio.height}:(ow-iw)/2:(oh-ih)/2`,
+        "-c:a", "copy",
+        outputFileName
+      ]);
+      
+      const fileData = await ffmpeg.readFile(outputFileName);
+      const data = new Uint8Array(fileData as ArrayBuffer);
+      const blob = new Blob([data.buffer], { type: "video/mp4" });
+      const url = URL.createObjectURL(blob);
+      
+      setProcessedVideoURL(url);
+      
+      if (videoRef.current) {
+        videoRef.current.src = url;
+      }
+    } catch (error) {
+      console.error("Error processing video:", error);
+      alert("Failed to process video. Please try again.");
+    } finally {
+      setProcessing(false);
     }
+  };
+
+  const downloadProcessedVideo = () => {
+    if (!processedVideoURL) return;
+    
+    const a = document.createElement("a");
+    a.href = processedVideoURL;
+    a.download = `ratio-d_${selectedAspectRatio.ratio.replace(":", "x")}_${Date.now()}.mp4`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">
-          Video Processor
+          Ratio-D - Video Aspect Ratio Converter
         </h1>
 
         {!loaded ? (
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
             <p className="text-gray-600 mb-4">
-              Load FFmpeg to start processing videos
+              Load FFmpeg to start converting videos
             </p>
             <button
               onClick={load}
@@ -157,39 +207,83 @@ function App() {
               )}
             </div>
 
+            {/* Aspect Ratio Selection */}
+            {uploadedVideoURL && (
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                  Select Target Aspect Ratio
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {ASPECT_RATIOS.map((aspectRatio) => (
+                    <button
+                      key={aspectRatio.ratio}
+                      onClick={() => setSelectedAspectRatio(aspectRatio)}
+                      className={`p-4 rounded-lg border-2 transition duration-200 ${
+                        selectedAspectRatio.ratio === aspectRatio.ratio
+                          ? "border-purple-600 bg-purple-50"
+                          : "border-gray-300 hover:border-purple-400"
+                      }`}
+                    >
+                      <div className="font-semibold text-gray-800">
+                        {aspectRatio.label}
+                      </div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        {aspectRatio.width} × {aspectRatio.height}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                
+                <button
+                  onClick={convertVideoAspectRatio}
+                  disabled={processing}
+                  className={`mt-6 w-full font-semibold py-3 px-6 rounded-lg transition duration-200 ${
+                    processing
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-purple-600 hover:bg-purple-700 text-white"
+                  }`}
+                >
+                  {processing ? "Converting..." : `Convert to ${selectedAspectRatio.ratio}`}
+                </button>
+              </div>
+            )}
+
             {/* Uploaded Video Preview */}
             {uploadedVideoURL && (
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                  Uploaded Video Preview
+                  Original Video Preview
                 </h2>
                 <video
                   src={uploadedVideoURL}
                   controls
                   className="w-full rounded-lg"
                 />
-                <button
-                  onClick={processUploadedVideo}
-                  className="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
-                >
-                  Process Video
-                </button>
               </div>
             )}
 
             {/* Processed Video Output */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                Processed Video
-              </h2>
-              <video ref={videoRef} controls className="w-full rounded-lg mb-4"></video>
-              
-              {messageRef.current?.innerHTML && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 font-mono" ref={messageRef}></p>
-                </div>
-              )}
-            </div>
+            {processedVideoURL && (
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                  Converted Video ({selectedAspectRatio.ratio})
+                </h2>
+                <video ref={videoRef} controls className="w-full rounded-lg mb-4"></video>
+                
+                <button
+                  onClick={downloadProcessedVideo}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+                >
+                  Download Converted Video
+                </button>
+                
+                {messageRef.current?.innerHTML && (
+                  <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 font-mono" ref={messageRef}></p>
+                  </div>
+                )}
+              </div>
+            )}
 
           </div>
         )}
