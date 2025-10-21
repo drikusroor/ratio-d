@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { toBlobURL, fetchFile } from "@ffmpeg/util";
 
@@ -43,7 +43,7 @@ const FIT_MODES: FitMode[] = [
 ];
 
 function App() {
-  const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [uploadedVideo, setUploadedVideo] = useState<File | null>(null);
   const [uploadedVideoURL, setUploadedVideoURL] = useState<string>("");
   const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatio>(ASPECT_RATIOS[0]);
@@ -56,6 +56,7 @@ function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const load = async () => {
+    setLoading(true);
     const baseURL = "https://cdn.jsdelivr.net/npm/@ffmpeg/core-mt@0.12.10/dist/esm";
     const ffmpeg = ffmpegRef.current;
     ffmpeg.on("log", ({ message }) => {
@@ -74,8 +75,13 @@ function App() {
         "text/javascript"
       ),
     });
-    setLoaded(true);
+    setLoading(false);
   };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -177,17 +183,17 @@ function App() {
           Ratio-D - Video Aspect Ratio Converter
         </h1>
 
-        {!loaded ? (
+        {loading ? (
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <p className="text-gray-600 mb-4">
-              Load FFmpeg to start converting videos
-            </p>
-            <button
-              onClick={load}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
-            >
-              Load FFmpeg
-            </button>
+            <div className="flex flex-col items-center justify-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mb-4"></div>
+              <p className="text-gray-600 text-lg font-medium">
+                Loading FFmpeg...
+              </p>
+              <p className="text-gray-500 text-sm mt-2">
+                This may take a few moments
+              </p>
+            </div>
           </div>
         ) : (
           <div className="space-y-6">
