@@ -178,7 +178,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">
           Ratio-D - Video Aspect Ratio Converter
         </h1>
@@ -196,171 +196,176 @@ function App() {
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            {/* Upload Section */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                Upload Video
-              </h2>
-              
-              <div
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-400 transition duration-200 cursor-pointer"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="video/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Left Side - Forms */}
+            <div className="w-full lg:w-1/2 space-y-6">
+              {/* Upload Section */}
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                  Upload Video
+                </h2>
                 
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400 mb-4"
-                  stroke="currentColor"
-                  fill="none"
-                  viewBox="0 0 48 48"
-                  aria-hidden="true"
+                <div
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-400 transition duration-200 cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
                 >
-                  <path
-                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
                   />
-                </svg>
-                
-                <p className="text-gray-600 mb-2">
-                  <span className="font-semibold text-purple-600">
-                    Click to upload
-                  </span>{" "}
-                  or drag and drop
-                </p>
-                <p className="text-sm text-gray-500">
-                  Any video format (MP4, AVI, MOV, etc.)
-                </p>
+                  
+                  <svg
+                    className="mx-auto h-12 w-12 text-gray-400 mb-4"
+                    stroke="currentColor"
+                    fill="none"
+                    viewBox="0 0 48 48"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  
+                  <p className="text-gray-600 mb-2">
+                    <span className="font-semibold text-purple-600">
+                      Click to upload
+                    </span>{" "}
+                    or drag and drop
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Any video format (MP4, AVI, MOV, etc.)
+                  </p>
+                </div>
+
+                {uploadedVideo && (
+                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-green-800">
+                      <span className="font-semibold">Uploaded:</span>{" "}
+                      {uploadedVideo.name} (
+                      {(uploadedVideo.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {uploadedVideo && (
-                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-green-800">
-                    <span className="font-semibold">Uploaded:</span>{" "}
-                    {uploadedVideo.name} (
-                    {(uploadedVideo.size / 1024 / 1024).toFixed(2)} MB)
-                  </p>
+              {/* Aspect Ratio Selection */}
+              {uploadedVideoURL && (
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                    Select Target Aspect Ratio
+                  </h2>
+                  <div className="grid grid-cols-2 gap-4">
+                    {ASPECT_RATIOS.map((aspectRatio) => (
+                      <button
+                        key={aspectRatio.ratio}
+                        onClick={() => setSelectedAspectRatio(aspectRatio)}
+                        className={`p-4 rounded-lg border-2 transition duration-200 ${
+                          selectedAspectRatio.ratio === aspectRatio.ratio
+                            ? "border-purple-600 bg-purple-50"
+                            : "border-gray-300 hover:border-purple-400"
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-800">
+                          {aspectRatio.label}
+                        </div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          {aspectRatio.width} × {aspectRatio.height}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Fit Mode Selection */}
+              {uploadedVideoURL && (
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                    Select Fit Mode
+                  </h2>
+                  <div className="space-y-3">
+                    {FIT_MODES.map((fitMode) => (
+                      <button
+                        key={fitMode.value}
+                        onClick={() => setSelectedFitMode(fitMode)}
+                        className={`w-full p-4 rounded-lg border-2 transition duration-200 text-left ${
+                          selectedFitMode.value === fitMode.value
+                            ? "border-purple-600 bg-purple-50"
+                            : "border-gray-300 hover:border-purple-400"
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-800">
+                          {fitMode.label}
+                        </div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          {fitMode.description}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <button
+                    onClick={convertVideoAspectRatio}
+                    disabled={processing}
+                    className={`mt-6 w-full font-semibold py-3 px-6 rounded-lg transition duration-200 ${
+                      processing
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-purple-600 hover:bg-purple-700 text-white"
+                    }`}
+                  >
+                    {processing ? "Converting..." : `Convert to ${selectedAspectRatio.ratio}`}
+                  </button>
                 </div>
               )}
             </div>
 
-            {/* Aspect Ratio Selection */}
-            {uploadedVideoURL && (
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                  Select Target Aspect Ratio
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {ASPECT_RATIOS.map((aspectRatio) => (
-                    <button
-                      key={aspectRatio.ratio}
-                      onClick={() => setSelectedAspectRatio(aspectRatio)}
-                      className={`p-4 rounded-lg border-2 transition duration-200 ${
-                        selectedAspectRatio.ratio === aspectRatio.ratio
-                          ? "border-purple-600 bg-purple-50"
-                          : "border-gray-300 hover:border-purple-400"
-                      }`}
-                    >
-                      <div className="font-semibold text-gray-800">
-                        {aspectRatio.label}
-                      </div>
-                      <div className="text-sm text-gray-500 mt-1">
-                        {aspectRatio.width} × {aspectRatio.height}
-                      </div>
-                    </button>
-                  ))}
+            {/* Right Side - Video Previews */}
+            <div className="w-full lg:w-1/2 space-y-6">
+              {/* Uploaded Video Preview */}
+              {uploadedVideoURL && (
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                    Original Video Preview
+                  </h2>
+                  <video
+                    src={uploadedVideoURL}
+                    controls
+                    className="w-full rounded-lg"
+                  />
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Fit Mode Selection */}
-            {uploadedVideoURL && (
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                  Select Fit Mode
-                </h2>
-                <div className="space-y-3">
-                  {FIT_MODES.map((fitMode) => (
-                    <button
-                      key={fitMode.value}
-                      onClick={() => setSelectedFitMode(fitMode)}
-                      className={`w-full p-4 rounded-lg border-2 transition duration-200 text-left ${
-                        selectedFitMode.value === fitMode.value
-                          ? "border-purple-600 bg-purple-50"
-                          : "border-gray-300 hover:border-purple-400"
-                      }`}
-                    >
-                      <div className="font-semibold text-gray-800">
-                        {fitMode.label}
-                      </div>
-                      <div className="text-sm text-gray-500 mt-1">
-                        {fitMode.description}
-                      </div>
-                    </button>
-                  ))}
+              {/* Processed Video Output */}
+              {processedVideoURL && (
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                    Converted Video ({selectedAspectRatio.ratio})
+                  </h2>
+                  <video ref={videoRef} src={processedVideoURL} controls className="w-full rounded-lg mb-4"></video>
+                  
+                  <button
+                    onClick={downloadProcessedVideo}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+                  >
+                    Download Converted Video
+                  </button>
+                  
+                  {messageRef.current?.innerHTML && (
+                    <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 font-mono" ref={messageRef}></p>
+                    </div>
+                  )}
                 </div>
-                
-                <button
-                  onClick={convertVideoAspectRatio}
-                  disabled={processing}
-                  className={`mt-6 w-full font-semibold py-3 px-6 rounded-lg transition duration-200 ${
-                    processing
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-purple-600 hover:bg-purple-700 text-white"
-                  }`}
-                >
-                  {processing ? "Converting..." : `Convert to ${selectedAspectRatio.ratio}`}
-                </button>
-              </div>
-            )}
-
-            {/* Uploaded Video Preview */}
-            {uploadedVideoURL && (
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                  Original Video Preview
-                </h2>
-                <video
-                  src={uploadedVideoURL}
-                  controls
-                  className="w-full rounded-lg"
-                />
-              </div>
-            )}
-
-            {/* Processed Video Output */}
-            {processedVideoURL && (
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                  Converted Video ({selectedAspectRatio.ratio})
-                </h2>
-                <video ref={videoRef} src={processedVideoURL} controls className="w-full rounded-lg mb-4"></video>
-                
-                <button
-                  onClick={downloadProcessedVideo}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
-                >
-                  Download Converted Video
-                </button>
-                
-                {messageRef.current?.innerHTML && (
-                  <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 font-mono" ref={messageRef}></p>
-                  </div>
-                )}
-              </div>
-            )}
-
+              )}
+            </div>
           </div>
         )}
       </div>
