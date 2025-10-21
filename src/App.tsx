@@ -9,6 +9,12 @@ type AspectRatio = {
   height: number;
 };
 
+type FitMode = {
+  label: string;
+  value: string;
+  description: string;
+};
+
 const ASPECT_RATIOS: AspectRatio[] = [
   { label: "16:9 (Widescreen)", ratio: "16:9", width: 1920, height: 1080 },
   { label: "9:16 (Vertical/TikTok)", ratio: "9:16", width: 1080, height: 1920 },
@@ -18,11 +24,30 @@ const ASPECT_RATIOS: AspectRatio[] = [
   { label: "4:5 (Instagram Portrait)", ratio: "4:5", width: 1080, height: 1350 },
 ];
 
+const FIT_MODES: FitMode[] = [
+  {
+    label: "Pad (Add Black Bars)",
+    value: "pad",
+    description: "Adds black bars to maintain aspect ratio",
+  },
+  {
+    label: "Crop (Fill Frame)",
+    value: "crop",
+    description: "Crops video to fill the frame",
+  },
+  {
+    label: "Stretch",
+    value: "stretch",
+    description: "Stretches video to fill the frame",
+  },
+];
+
 function App() {
   const [loaded, setLoaded] = useState(false);
   const [uploadedVideo, setUploadedVideo] = useState<File | null>(null);
   const [uploadedVideoURL, setUploadedVideoURL] = useState<string>("");
   const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatio>(ASPECT_RATIOS[0]);
+  const [selectedFitMode, setSelectedFitMode] = useState<FitMode>(FIT_MODES[0]);
   const [processing, setProcessing] = useState(false);
   const [processedVideoURL, setProcessedVideoURL] = useState<string>("");
   const ffmpegRef = useRef(new FFmpeg());
@@ -87,15 +112,34 @@ function App() {
     setProcessing(true);
     const ffmpeg = ffmpegRef.current;
     const inputFileName = uploadedVideo.name;
-    const outputFileName = `ratio-d_${selectedAspectRatio.ratio.replace(":", "x")}_${Date.now()}.mp4`;
+    const outputFileName = `ratio-d_${selectedAspectRatio.ratio.replace(":", "x")}_${selectedFitMode.value}_${Date.now()}.mp4`;
     
     try {
       await ffmpeg.writeFile(inputFileName, await fetchFile(uploadedVideo));
       
-      // FFmpeg command to convert aspect ratio with padding (pillarbox/letterbox)
+      // Build FFmpeg filter based on fit mode
+      let videoFilter = "";
+      switch (selectedFitMode.value) {
+        case "pad":
+          // Add black bars (letterbox/pillarbox)
+          videoFilter = `scale=${selectedAspectRatio.width}:${selectedAspectRatio.height}:force_original_aspect_ratio=decrease,pad=${selectedAspectRatio.width}:${selectedAspectRatio.height}:(ow-iw)/2:(oh-ih)/2`;
+          break;
+        case "crop":
+          // Crop to fill frame
+          videoFilter = `scale=${selectedAspectRatio.width}:${selectedAspectRatio.height}:force_original_aspect_ratio=increase,crop=${selectedAspectRatio.width}:${selectedAspectRatio.height}`;
+          break;
+        case "stretch":
+          // Stretch to fill frame (ignore aspect ratio)
+          videoFilter = `scale=${selectedAspectRatio.width}:${selectedAspectRatio.height}`;
+          break;
+        default:
+          videoFilter = `scale=${selectedAspectRatio.width}:${selectedAspectRatio.height}:force_original_aspect_ratio=decrease,pad=${selectedAspectRatio.width}:${selectedAspectRatio.height}:(ow-iw)/2:(oh-ih)/2`;
+      }
+      
+      // FFmpeg command to convert aspect ratio
       await ffmpeg.exec([
         "-i", inputFileName,
-        "-vf", `scale=${selectedAspectRatio.width}:${selectedAspectRatio.height}:force_original_aspect_ratio=decrease,pad=${selectedAspectRatio.width}:${selectedAspectRatio.height}:(ow-iw)/2:(oh-ih)/2`,
+        "-vf", videoFilter,
         "-c:a", "copy",
         outputFileName
       ]);
@@ -123,7 +167,7 @@ function App() {
     
     const a = document.createElement("a");
     a.href = processedVideoURL;
-    a.download = `ratio-d_${selectedAspectRatio.ratio.replace(":", "x")}_${Date.now()}.mp4`;
+    a.download = `ratio-d_${selectedAspectRatio.ratio.replace(":", "x")}_${selectedFitMode.value}_${Date.now()}.mp4`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -229,6 +273,35 @@ function App() {
                       </div>
                       <div className="text-sm text-gray-500 mt-1">
                         {aspectRatio.width} × {aspectRatio.height}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Fit Mode Selection */}
+            {uploadedVideoURL && (
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                  Select Fit Mode
+                </h2>
+                <div className="space-y-3">
+                  {FIT_MODES.map((fitMode) => (
+                    <button
+                      key={fitMode.value}
+                      onClick={() => setSelectedFitMode(fitMode)}
+                      className={`w-full p-4 rounded-lg border-2 transition duration-200 text-left ${
+                        selectedFitMode.value === fitMode.value
+                          ? "border-purple-600 bg-purple-50"
+                          : "border-gray-300 hover:border-purple-400"
+                      }`}
+                    >
+                      <div className="font-semibold text-gray-800">
+                        {fitMode.label}
+                      </div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        {fitMode.description}
                       </div>
                     </button>
                   ))}
