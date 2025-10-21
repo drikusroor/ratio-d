@@ -15,6 +15,8 @@ type FitMode = {
   description: string;
 };
 
+type VideoViewMode = 'original' | 'processed' | 'compare';
+
 const ASPECT_RATIOS: AspectRatio[] = [
   { label: "16:9 (Widescreen)", ratio: "16:9", width: 1920, height: 1080 },
   { label: "9:16 (Vertical/TikTok)", ratio: "9:16", width: 1080, height: 1920 },
@@ -50,6 +52,7 @@ function App() {
   const [selectedFitMode, setSelectedFitMode] = useState<FitMode>(FIT_MODES[0]);
   const [processing, setProcessing] = useState(false);
   const [processedVideoURL, setProcessedVideoURL] = useState<string>("");
+  const [videoViewMode, setVideoViewMode] = useState<VideoViewMode>('original');
   const ffmpegRef = useRef(new FFmpeg());
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const messageRef = useRef<HTMLParagraphElement | null>(null);
@@ -156,6 +159,7 @@ function App() {
       const url = URL.createObjectURL(blob);
       
       setProcessedVideoURL(url);
+      setVideoViewMode('processed'); // Automatically switch to processed video view
       
     } catch (error) {
       console.error("Error processing video:", error);
@@ -328,44 +332,131 @@ function App() {
             </div>
 
             {/* Right Side - Video Previews */}
-            <div className="w-full lg:w-1/2 space-y-6">
-              {/* Uploaded Video Preview */}
-              {uploadedVideoURL && (
+            {uploadedVideoURL && (
+              <div className="w-full lg:w-1/2">
                 <div className="bg-white rounded-lg shadow-lg p-6">
-                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                    Original Video Preview
-                  </h2>
-                  <video
-                    src={uploadedVideoURL}
-                    controls
-                    className="w-full rounded-lg"
-                  />
-                </div>
-              )}
+                  {/* Tab Navigation */}
+                  <div className="flex border-b border-gray-200 mb-6">
+                    <button
+                      onClick={() => setVideoViewMode('original')}
+                      className={`px-4 py-2 font-semibold transition-colors border-b-2 ${
+                        videoViewMode === 'original'
+                          ? 'border-purple-600 text-purple-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      Original
+                    </button>
+                    <button
+                      onClick={() => setVideoViewMode('processed')}
+                      disabled={!processedVideoURL}
+                      className={`px-4 py-2 font-semibold transition-colors border-b-2 ${
+                        videoViewMode === 'processed'
+                          ? 'border-purple-600 text-purple-600'
+                          : processedVideoURL
+                          ? 'border-transparent text-gray-500 hover:text-gray-700'
+                          : 'border-transparent text-gray-300 cursor-not-allowed'
+                      }`}
+                    >
+                      Processed
+                    </button>
+                    <button
+                      onClick={() => setVideoViewMode('compare')}
+                      disabled={!processedVideoURL}
+                      className={`px-4 py-2 font-semibold transition-colors border-b-2 ${
+                        videoViewMode === 'compare'
+                          ? 'border-purple-600 text-purple-600'
+                          : processedVideoURL
+                          ? 'border-transparent text-gray-500 hover:text-gray-700'
+                          : 'border-transparent text-gray-300 cursor-not-allowed'
+                      }`}
+                    >
+                      Compare
+                    </button>
+                  </div>
 
-              {/* Processed Video Output */}
-              {processedVideoURL && (
-                <div className="bg-white rounded-lg shadow-lg p-6">
-                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                    Converted Video ({selectedAspectRatio.ratio})
-                  </h2>
-                  <video ref={videoRef} src={processedVideoURL} controls className="w-full rounded-lg mb-4"></video>
-                  
-                  <button
-                    onClick={downloadProcessedVideo}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
-                  >
-                    Download Converted Video
-                  </button>
-                  
-                  {messageRef.current?.innerHTML && (
-                    <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <p className="text-sm text-gray-600 font-mono" ref={messageRef}></p>
+                  {/* Video Display Area */}
+                  {videoViewMode === 'original' && (
+                    <div>
+                      <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                        Original Video Preview
+                      </h2>
+                      <video
+                        src={uploadedVideoURL}
+                        controls
+                        className="w-full rounded-lg"
+                      />
+                    </div>
+                  )}
+
+                  {videoViewMode === 'processed' && processedVideoURL && (
+                    <div>
+                      <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                        Converted Video ({selectedAspectRatio.ratio})
+                      </h2>
+                      <video 
+                        ref={videoRef} 
+                        src={processedVideoURL} 
+                        controls 
+                        className="w-full rounded-lg mb-4"
+                      />
+                      
+                      <button
+                        onClick={downloadProcessedVideo}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+                      >
+                        Download Converted Video
+                      </button>
+                      
+                      {messageRef.current?.innerHTML && (
+                        <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                          <p className="text-sm text-gray-600 font-mono" ref={messageRef}></p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {videoViewMode === 'compare' && processedVideoURL && (
+                    <div className="space-y-4">
+                      <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                        Compare Videos
+                      </h2>
+                      
+                      {/* Original Video */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                          Original
+                        </h3>
+                        <video
+                          src={uploadedVideoURL}
+                          controls
+                          className="w-full rounded-lg"
+                        />
+                      </div>
+
+                      {/* Processed Video */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                          Converted ({selectedAspectRatio.ratio})
+                        </h3>
+                        <video
+                          src={processedVideoURL}
+                          controls
+                          className="w-full rounded-lg"
+                        />
+                      </div>
+
+                      <button
+                        onClick={downloadProcessedVideo}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+                      >
+                        Download Converted Video
+                      </button>
                     </div>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>
