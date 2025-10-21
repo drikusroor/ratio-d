@@ -151,9 +151,6 @@ function App() {
       
       setProcessedVideoURL(url);
       
-      if (videoRef.current) {
-        videoRef.current.src = url;
-      }
     } catch (error) {
       console.error("Error processing video:", error);
       alert("Failed to process video. Please try again.");
@@ -341,7 +338,7 @@ function App() {
                 <h2 className="text-2xl font-semibold text-gray-800 mb-4">
                   Converted Video ({selectedAspectRatio.ratio})
                 </h2>
-                <video ref={videoRef} controls className="w-full rounded-lg mb-4"></video>
+                <video ref={videoRef} src={processedVideoURL} controls className="w-full rounded-lg mb-4"></video>
                 
                 <button
                   onClick={downloadProcessedVideo}
