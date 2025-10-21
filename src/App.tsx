@@ -24,20 +24,28 @@ export default function FixAspectTool() {
       if (messageRef.current) messageRef.current.innerHTML = message;
       setLog((prev) => prev + message + "\n");
     });
-    // toBlobURL is used to bypass CORS issue, urls with the same
-    // domain can be used directly.
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(
-        `${baseURL}/ffmpeg-core.wasm`,
-        "application/wasm"
-      ),
-      workerURL: await toBlobURL(
-        `${baseURL}/ffmpeg-core.worker.js`,
-        "text/javascript"
-      ),
-    });
-    setReady(true);
+    
+    try {
+      // toBlobURL is used to bypass CORS issue, urls with the same
+      // domain can be used directly.
+      await ffmpeg.load({
+        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+        wasmURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.wasm`,
+          "application/wasm"
+        ),
+        workerURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.worker.js`,
+          "text/javascript"
+        ),
+      });
+      setReady(true);
+    } catch (err) {
+      console.error("Failed to load FFmpeg:", err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setLog(`Failed to load FFmpeg: ${errorMessage}`);
+      alert(`Failed to load FFmpeg. Please check the console for details.\n\nError: ${errorMessage}`);
+    }
   };
 
   // handle file selection
